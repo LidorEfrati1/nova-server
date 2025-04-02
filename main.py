@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
-import os
 import json
 
 app = FastAPI()
@@ -16,12 +15,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# נתיב לקובץ ה-Secret שהגדרת ב-Render
+SERVICE_ACCOUNT_FILE_PATH = "/etc/secrets/google_credentials.json"
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
-json_creds = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
-if not json_creds:
-    raise Exception("Missing GOOGLE_APPLICATION_CREDENTIALS_JSON environment variable")
 
-info = json.loads(json_creds)
+# קריאת הקובץ וטעינת האישורים
+with open(SERVICE_ACCOUNT_FILE_PATH) as f:
+    info = json.load(f)
+
 credentials = Credentials.from_service_account_info(info, scopes=SCOPES)
 service = build("sheets", "v4", credentials=credentials)
 
